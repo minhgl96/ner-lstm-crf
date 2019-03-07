@@ -88,11 +88,13 @@ class NERModel(object):
             b = tf.get_variable("b", shape=[self.ntags], dtype=tf.float32,
                                 initializer=tf.zeros_initializer())
 
-            ntime_steps = tf.shape(output)[1]
+            ntime_steps = tf.shape(output)[1] # output.shape = [batch size, num tokens (i.e., num timesteps), word representation dim]
+    
             output = tf.reshape(output, [-1, 2 * self.config.hidden_size])
             # Highway Layer
             output = self.highway(output, 2 * self.config.hidden_size, tf.nn.relu)
-            pred = tf.matmul(output, W) + b
+            pred = tf.matmul(output, W) + b # each word representation is transformed to a vector of 'ntags' (i.e., number of NER tags) dimensions
+            # => 'pred' serves as logits values which be often pushed into a softmax layer.
             self.logits = tf.reshape(pred, [-1, ntime_steps, self.ntags])
 
         log_likelihood, self.transition_params = crf_log_likelihood(
